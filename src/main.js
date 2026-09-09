@@ -1,6 +1,5 @@
-import * as XLSX from 'xlsx'
+const XLSX = globalThis.XLSX
 import { parseTimetable, parseSubstitutionLog, calculateCandidates } from './logic.js'
-import './style.css'
 
 const state = { timetable: null, workbook: null, log: null, sheet: '', adjustments: {}, records: [], last: null }
 const weekdays = ['일','월','화','수','목','금','토']; const today = new Date().toISOString().slice(0,10)

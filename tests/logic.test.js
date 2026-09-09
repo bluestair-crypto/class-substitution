@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { describe, it } from 'node:test'
+import assert from 'node:assert/strict'
+const expect = actual => ({ toBe: expected => assert.equal(actual, expected), toEqual: expected => assert.deepEqual(actual, expected), toContain: expected => assert.ok(actual.includes(expected)) })
 import { calculateCandidates, wouldCreateThreeConsecutiveClasses } from '../src/logic.js'
 const teacher=(name,hours='',periods=[])=>({name,hours,schedule:{월:Object.fromEntries([1,2,3,4,5,6,7].map(p=>[p,periods.includes(p)]))}})
 const log=(...items)=>items.map(([name,total],order)=>({name,total,order}))

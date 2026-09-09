@@ -22,19 +22,33 @@
 - 교사명, 시간표, 결보강 기록을 소스에 포함하거나 `localStorage` 등에 저장하지 않습니다.
 - 원본 Excel을 수정하지 않습니다. 새로고침하거나 탭을 닫으면 불러온 정보와 배정 기록은 사라집니다.
 
-## 개발 및 테스트
+## 실행 및 테스트
+
+npm 설치나 빌드 없이 정적 파일을 그대로 사용합니다. `index.html`, `src/`, `vendor/`가 함께 있어야 합니다. 로컬에서는 정적 HTTP 서버로 저장소 폴더를 열어 주세요. 파일을 더블클릭하는 `file://` 실행은 JavaScript 모듈 보안 정책 때문에 지원하지 않습니다.
+
+Node.js 18 이상이 있는 개발 환경에서는 패키지 설치 없이 테스트할 수 있습니다.
 
 ```bash
-npm install
-npm run dev
-npm test
-npm run build
+node --test
 ```
 
 ## GitHub Pages 배포
 
-1. 저장소의 **Settings → Pages**에서 GitHub Actions 또는 정적 배포 브랜치를 선택합니다.
-2. `npm ci && npm run build`를 실행하고 생성된 `dist/` 폴더를 Pages에 배포합니다.
-3. 프로젝트 경로로 배포한다면 Vite의 `base` 옵션을 저장소 이름에 맞추거나, 빌드 시 `vite build --base=/저장소명/`을 사용합니다.
+1. 저장소의 **Settings → Pages → Build and deployment**로 이동합니다.
+2. **Source: Deploy from a branch**를 선택합니다.
+3. **Branch: main**, **Folder: / (root)**를 선택하고 저장합니다.
+4. Pages 배포가 완료되면 https://bluestair-crypto.github.io/class-substitution/ 에 접속합니다.
+
+`npm install`, `npm ci`, `npm run build` 및 `dist/` 폴더는 필요하지 않습니다. 모든 앱 경로가 상대 경로이므로 `/class-substitution/` 및 다른 프로젝트 경로에서도 실행됩니다. `.nojekyll`은 파일을 정적으로 제공하도록 포함되어 있습니다.
+
+기존에 직접 만든 빌드 워크플로를 사용하는 경우 해당 워크플로 대신 위의 브랜치 배포를 선택하세요. 이전 화면이 남아 있으면 배포 완료 후 강력 새로고침(Ctrl+Shift+R)을 해 주세요.
+
+## 흰 화면 수정 내용
+
+기존 `/src/main.js` 절대 경로는 프로젝트 경로 밖을 가리켰습니다. 또한 `import 'xlsx'`와 JavaScript의 CSS import는 Vite 빌드 없이 브라우저에서 실행할 수 없었습니다.
+
+이제 CSS는 HTML의 상대 경로 링크로, Excel 라이브러리는 같은 저장소의 `vendor/xlsx.full.min.js`로 읽습니다. 시작 실패 시에는 빈 화면 대신 파일 배포 확인 안내를 표시합니다. 추천 알고리즘 및 배정·취소·초기화 동작은 기존과 동일합니다.
+
+외부 CDN, 백엔드, 분석 서비스를 사용하지 않습니다. CSP의 `connect-src 'none'` 설정으로 앱의 네트워크 데이터 전송도 차단합니다. 새로고침 시 작업 데이터는 사라집니다.
 
 저장소에는 실제 학교 Excel 파일이나 실제 교사 정보를 커밋하지 마세요.

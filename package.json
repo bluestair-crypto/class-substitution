@@ -1,9 +1,9 @@
 {
   "name": "class-substitution",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
-  "scripts": { "dev": "vite", "build": "vite build", "test": "vitest run" },
-  "dependencies": { "xlsx": "^0.18.5" },
-  "devDependencies": { "vite": "^7.1.4", "vitest": "^3.2.4" }
+  "scripts": {
+    "test": "node --test"
+  }
 }
