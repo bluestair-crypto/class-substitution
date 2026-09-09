@@ -8,22 +8,42 @@ export function parseTeacherName(value) {
 
 const rows = sheet => sheet && Array.isArray(sheet.data) ? sheet.data : sheet
 
+// Header formatting may include spaces, line breaks, Excel escapes or invisible characters.
+const headerText = value => tidy(value).normalize('NFKC').replace(/[\s\u200B-\u200D\uFEFF]/g, '')
+
 export function parseTimetable(sheet) {
   const data = rows(sheet)
-  if (!Array.isArray(data) || data.length < 4) throw new Error('시간표 파일 구조를 확인해 주세요.')
+  if (!Array.isArray(data) || data.length < 3) throw new Error('시간표 파일 구조를 확인해 주세요.')
+  const merges = Array.isArray(sheet?.merges) ? sheet.merges : []
+  // Resolve merged cells only in headers. Never propagate teacher names or lesson cells.
+  const headerCell = (r, c) => {
+    const merge = merges.find(m => r >= m.s.r && r <= m.e.r && c >= m.s.c && c <= m.e.c)
+    return merge ? data[merge.s.r]?.[merge.s.c] : data[r]?.[c]
+  }
   let headerRow = -1; let teacherCol = -1
-  for (let r = 0; r < Math.min(data.length, 10); r++) {
-    const c = (data[r] || []).findIndex(v => tidy(v) === '교사')
+  for (let r = 0; r < data.length - 1; r++) {
+    const c = (data[r] || []).findIndex(v => headerText(v) === '교사')
     if (c >= 0) { headerRow = r; teacherCol = c; break }
   }
   if (teacherCol < 0) throw new Error('시간표에서 교사 열을 찾을 수 없습니다.')
   const dayRow = data[headerRow] || []; const periodRow = data[headerRow + 1] || []
   const columns = []; let day = ''
   const dayPattern = /^(월|화|수|목|금)(요일)?$/
+  const seen = new Set()
   for (let c = teacherCol + 1; c < Math.max(dayRow.length, periodRow.length); c++) {
-    const value = tidy(dayRow[c]); if (dayPattern.test(value)) day = value[0]
-    const periodText = tidy(periodRow[c]); const match = periodText.match(/(\d+)/)
-    if (day && match) columns.push({ col: c, day, period: Number(match[1]) })
+    const value = headerText(headerCell(headerRow, c))
+    if (dayPattern.test(value)) day = value[0]
+    else if (value) day = ''
+    // With actual merges, a weekday must come from that cell's own merged header.
+    if (merges.length && !value) day = ''
+    const match = headerText(data[headerRow + 1]?.[c]).match(/^(\d+)(교시)?$/)
+    if (!day || !match) continue
+    const period = Number(match[1])
+    if (!Number.isSafeInteger(period) || period < 1) throw new Error('시간표의 교시 번호를 확인해 주세요.')
+    const key = day + ':' + period
+    if (seen.has(key)) throw new Error('시간표에 중복된 요일/교시가 있습니다.')
+    seen.add(key)
+    columns.push({ col: c, day, period })
   }
   if (!columns.length) throw new Error('시간표에서 요일/교시 헤더를 찾을 수 없습니다.')
   const teachers = []

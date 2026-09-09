@@ -1,3 +1,4 @@
+import { readTimetableSheet } from './timetable-sheet.js'
 const XLSX = globalThis.XLSX
 import { parseTimetable, parseSubstitutionLog, calculateCandidates } from './logic.js'
 
@@ -16,7 +17,7 @@ const $ = id => document.getElementById(id); const error = msg => { $('error').t
 async function read(file) { return XLSX.read(await file.arrayBuffer(), { type:'array' }) }
 const sheetRows = (wb, name) => XLSX.utils.sheet_to_json(wb.Sheets[name], { header:1, defval:'', raw:true })
 
-$('timetable').onchange = async e => { try { error(''); const wb=await read(e.target.files[0]); const name=wb.SheetNames.includes('주간시간표')?'주간시간표':wb.SheetNames[0]; state.timetable=parseTimetable(sheetRows(wb,name)); $('timeStatus').textContent='✓ 시간표 불러오기 완료'; update() } catch(ex){ state.timetable=null; error(ex.message); update() } }
+$('timetable').onchange = async e => { try { error(''); const wb=await read(e.target.files[0]); state.timetable=parseTimetable(readTimetableSheet(wb, XLSX)); $('timeStatus').textContent='✓ 시간표 불러오기 완료'; update() } catch(ex){ state.timetable=null; error(ex.message); update() } }
 $('log').onchange = async e => { try { error(''); state.workbook=await read(e.target.files[0]); const sel=$('sheet'); sel.innerHTML=state.workbook.SheetNames.map(n=>`<option>${escapeHtml(n)}</option>`).join(''); sel.disabled=false; selectMonth(); loadLog(); $('logStatus').textContent='✓ 결보강 일지 불러오기 완료'; update() } catch(ex){ state.log=null; error(ex.message); update() } }
 $('date').onchange = () => { selectMonth(); if(state.workbook) loadLog(); updatePeriods() }
 $('sheet').onchange = () => { loadLog(); update() }
